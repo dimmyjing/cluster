@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/namespace-v1.json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrepository-source-v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: hyperdx-repo
+  namespace: observability
+spec:
+  interval: 1m0s
+  url: https://hyperdxio.github.io/helm-charts
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json
+# https://artifacthub.io/packages/helm/hdx-oss-v2/hdx-oss-v2
+# https://github.com/hyperdxio/helm-charts/blob/main/charts/hdx-oss-v2/values.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hyperdx-release
+  namespace: observability
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: hdx-oss-v2
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: hyperdx-repo
+      version: 0.8.4
+  values:
+    hyperdx:
+      useExistingConfigSecret: true
+      existingConfigSecret: hyperdx-external-config
+      existingConfigConnectionsKey: connections.json
+      defaultSources: |
+        [
+          {
+            "from": {
+              "databaseName": "otel",
+              "tableName": "otel_logs"
+            },
+            "kind": "log",
+            "timestampValueExpression": "TimestampTime",
+            "name": "Logs",
+            "displayedTimestampValueExpression": "Timestamp",
+            "implicitColumnExpression": "Body",
+            "serviceNameExpression": "ServiceName",
+            "bodyExpression": "Body",
+            "eventAttributesExpression": "LogAttributes",
+            "resourceAttributesExpression": "ResourceAttributes",
+            "defaultTableSelectExpression": "Timestamp,ServiceName,SeverityText,Body",
+            "severityTextExpression": "SeverityText",
+            "traceIdExpression": "TraceId",
+            "spanIdExpression": "SpanId",
+            "connection": "Clickhouse Cluster",
+            "traceSourceId": "Traces",
+            "sessionSourceId": "Sessions",
+            "metricSourceId": "Metrics"
+          },
+          {
+            "from": {
+              "databaseName": "otel",
+              "tableName": "otel_traces"
+            },
+            "kind": "trace",
+            "timestampValueExpression": "Timestamp",
+            "name": "Traces",
+            "displayedTimestampValueExpression": "Timestamp",
+            "implicitColumnExpression": "SpanName",
+            "serviceNameExpression": "ServiceName",
+            "bodyExpression": "SpanName",
+            "eventAttributesExpression": "SpanAttributes",
+            "resourceAttributesExpression": "ResourceAttributes",
+            "defaultTableSelectExpression": "Timestamp,ServiceName,StatusCode,round(Duration/1e6),SpanName",
+            "traceIdExpression": "TraceId",
+            "spanIdExpression": "SpanId",
+            "durationExpression": "Duration",
+            "durationPrecision": 9,
+            "parentSpanIdExpression": "ParentSpanId",
+            "spanNameExpression": "SpanName",
+            "spanKindExpression": "SpanKind",
+            "statusCodeExpression": "StatusCode",
+            "statusMessageExpression": "StatusMessage",
+            "connection": "Clickhouse Cluster",
+            "logSourceId": "Logs",
+            "sessionSourceId": "Sessions",
+            "metricSourceId": "Metrics"
+          },
+          {
+            "from": {
+              "databaseName": "otel",
+              "tableName": ""
+            },
+            "kind": "metric",
+            "timestampValueExpression": "TimeUnix",
+            "name": "Metrics",
+            "resourceAttributesExpression": "ResourceAttributes",
+            "metricTables": {
+              "gauge": "otel_metrics_gauge",
+              "histogram": "otel_metrics_histogram",
+              "sum": "otel_metrics_sum",
+              "_id": "682586a8b1f81924e628e808",
+              "id": "682586a8b1f81924e628e808"
+            },
+            "connection": "Clickhouse Cluster",
+            "logSourceId": "Logs",
+            "traceSourceId": "Traces",
+            "sessionSourceId": "Sessions"
+          },
+          {
+            "from": {
+              "databaseName": "otel",
+              "tableName": "hyperdx_sessions"
+            },
+            "kind": "session",
+            "timestampValueExpression": "TimestampTime",
+            "name": "Sessions",
+            "displayedTimestampValueExpression": "Timestamp",
+            "implicitColumnExpression": "Body",
+            "serviceNameExpression": "ServiceName",
+            "bodyExpression": "Body",
+            "eventAttributesExpression": "LogAttributes",
+            "resourceAttributesExpression": "ResourceAttributes",
+            "defaultTableSelectExpression": "Timestamp,ServiceName,SeverityText,Body",
+            "severityTextExpression": "SeverityText",
+            "traceIdExpression": "TraceId",
+            "spanIdExpression": "SpanId",
+            "connection": "Clickhouse Cluster",
+            "logSourceId": "Logs",
+            "traceSourceId": "Traces",
+            "metricSourceId": "Metrics"
+          }
+        ]
+    clickhouse:
+      enabled: false
+    otel:
+      clickhouseEndpoint: tcp://clickhouse-cluster01.clickhouse.svc.cluster.local:9000
+      clickhouseUser: otel-collector
+      clickhousePassword:
+        valueFrom:
+          secretKeyRef:
+            name: clickhouse-opentelemetry-collector-account
+            key: password
+      clickhousePrometheusEndpoint: ""
+      clickhouseDatabase: otel
