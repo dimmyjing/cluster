@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/namespace-v1.json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clickhouse
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrepository-source-v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: altinity-repo
+  namespace: clickhouse
+spec:
+  interval: 1m0s
+  url: https://helm.altinity.com
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json
+# https://artifacthub.io/packages/helm/altinity-clickhouse-operator/altinity-clickhouse-operator
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: clickhouse-operator-release
+  namespace: clickhouse
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: altinity-clickhouse-operator
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: altinity-repo
+      version: 0.25.5
+  values:
