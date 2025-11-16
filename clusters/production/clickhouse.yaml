@@ -98,12 +98,12 @@ spec:
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
                     secretKeyRef:
-                      name: clickhouse_b2_key
+                      name: clickhouse-b2-application-key
                       key: access_key_id
                 - name: AWS_SECRET_ACCESS_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: clickhouse_b2_key
+                      name: clickhouse-b2-application-key
                       key: access_key
     volumeClaimTemplates:
       - name: clickhouse-storage
