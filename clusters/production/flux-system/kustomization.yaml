@@ -9,6 +9,7 @@ patches:
       kind: Kustomization
       metadata:
         name: flux-system
+        namespace: flux-system
       spec:
         decryption:
           provider: sops
