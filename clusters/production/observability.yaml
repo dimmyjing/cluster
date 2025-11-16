@@ -47,7 +47,7 @@ spec:
       enabled: false
     otel:
       enabled: false
-# ---
+---
 # # yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/configmap-v1.json
 # apiVersion: v1
 # kind: ConfigMap
@@ -135,7 +135,7 @@ spec:
             # - name: CUSTOM_OTELCOL_CONFIG_FILE
             #   value: /etc/otelcol-contrib/custom.config.yaml
             - name: OTEL_AGENT_FEATURE_GATE_ARG
-              value: --feature-gates=clickhouse.json
+              value: "--feature-gates=clickhouse.json"
           # volumeMounts:
           #   - name: custom-config
           #     mountPath: /etc/otelcol-contrib/custom.config.yaml
