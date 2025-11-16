@@ -23,6 +23,19 @@ provider "registry.opentofu.org/alekc/kubectl" {
   ]
 }
 
+provider "registry.opentofu.org/backblaze/b2" {
+  version     = "0.11.0"
+  constraints = ">= 0.11.0"
+  hashes = [
+    "h1:SF3H0xB82hkOpzRIqGc4S1wFeol3GaObkwlISS5tgpQ=",
+    "zh:1db7f479d787914c4cfba494c5e1ddc14f4f9338fc6bd27cfbbdd4c15be97019",
+    "zh:37865226dfddbe2f16671c5f4d2bfd3370afa5c3e66d6f914387d9260119a9d7",
+    "zh:8536a1b009b60de07ee445bc6fc42c358d44c4dc80aab110844621049dcfc37f",
+    "zh:a5bbb49f24a7dcc7ccfa6fda82a3df8e8fb7fdce5eb591699568d753aa6dba35",
+    "zh:a9a460aee95ad6b50d2396223154d8dd6b62af57fd2a42b37330cdaf5ee28bc4",
+  ]
+}
+
 provider "registry.opentofu.org/fluxcd/flux" {
   version     = "1.7.4"
   constraints = ">= 1.7.4"

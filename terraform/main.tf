@@ -16,6 +16,11 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.38.0"
     }
+
+    b2 = {
+      source  = "backblaze/b2"
+      version = ">= 0.11.0"
+    }
   }
 }
 
@@ -44,17 +49,13 @@ module "talos" {
 }
 
 resource "local_file" "talosconfig" {
-  filename = "./config/talosconfig"
+  filename = "../config/talosconfig"
   content  = module.talos.talosconfig
 }
 
 resource "local_file" "kubeconfig" {
-  filename = "./config/kubeconfig"
+  filename = "../config/kubeconfig"
   content  = module.talos.kubeconfig
-}
-
-provider "kubernetes" {
-  config_path = "./config/kubeconfig"
 }
 
 resource "kubernetes_namespace" "flux-system" {
@@ -73,23 +74,9 @@ resource "kubernetes_secret" "sops-age" {
     namespace = "flux-system"
   }
   data = {
-    "age.agekey" = file("${path.root}/config/key.txt")
+    "age.agekey" = file("${path.root}/../config/key.txt")
   }
   depends_on = [kubernetes_namespace.flux-system]
-}
-
-provider "flux" {
-  kubernetes = {
-    config_path = "./config/kubeconfig"
-  }
-  git = {
-    url          = var.flux_git_repo_url
-    author_email = var.flux_author_email
-    http = {
-      username = "git"
-      password = var.github_token
-    }
-  }
 }
 
 resource "flux_bootstrap_git" "flux" {
@@ -99,6 +86,17 @@ resource "flux_bootstrap_git" "flux" {
     "image-reflector-controller",
     "image-automation-controller"
   ]
-  kustomization_override = file("${path.root}/config/flux-kustomization-patch.yaml")
+  kustomization_override = file("${path.root}/../config/flux-kustomization-patch.yaml")
   path                   = "clusters/production"
+}
+
+resource "b2_bucket" "clickhouse" {
+  bucket_name = "jimmy-cluster-clickhouse"
+  bucket_type = "allPrivate"
+}
+
+resource "b2_application_key" "clickhouse_key" {
+  key_name     = "jimmy-cluster-clickhouse-key"
+  capabilities = ["deleteFiles", "listFiles", "readFiles", "writeFiles"]
+  bucket_id    = b2_bucket.clickhouse.bucket_id
 }

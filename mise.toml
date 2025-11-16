@@ -12,27 +12,23 @@ run = [
 	'packer init .',
 	'packer build .'
 ]
-dir = "./build/packer"
+dir = "./terraform/packer"
 hide = true
 
 [tasks."tofu:init"]
 description = "Initialize OpenTofu"
 run = ['tofu init']
+dir = "./terraform"
 
 [tasks."tofu:plan"]
 description = "Generate and show an execution plan for OpenTofu"
 run = ['tofu plan']
+dir = "./terraform"
 
 [tasks."tofu:apply"]
 description = "Apply the changes required to reach the desired state of the configuration for OpenTofu"
-run = ['tofu apply']
-
-[tasks."tofu:output-config"]
-description = "Output the configuration values for OpenTofu"
-run = [
-	'terraform output --raw kubeconfig > ./config/kubeconfig',
-	'terraform output --raw talosconfig > ./config/talosconfig'
-]
+run = ['tofu apply -auto-approve']
+dir = "./terraform"
 
 [tasks.reconcile]
 description = "Reconcile the Talos cluster using Flux"

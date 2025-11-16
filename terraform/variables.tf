@@ -25,3 +25,13 @@ variable "github_token" {
   description = "GitHub Token for accessing private repositories"
   type        = string
 }
+
+variable "b2_application_key" {
+  description = "Backblaze B2 Application Key"
+  type        = string
+}
+
+variable "b2_application_key_id" {
+  description = "Backblaze B2 Application Key ID"
+  type        = string
+}
