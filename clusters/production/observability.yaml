@@ -36,6 +36,8 @@ spec:
     global:
       storageClassName: hcloud-volumes
     hyperdx:
+      env:
+        BETA_CH_OTEL_JSON_SCHEMA_ENABLED: "true"
       useExistingConfigSecret: true
       existingConfigSecret: hyperdx-external-config
       existingConfigConnectionsKey: connections.json
@@ -43,6 +45,8 @@ spec:
     clickhouse:
       enabled: false
     otel:
+      env:
+        OTEL_AGENT_FEATURE_GATE_ARG: --feature-gates=clickhouse.json
       clickhouseEndpoint: tcp://clickhouse-cluster01.clickhouse.svc.cluster.local:9000
       clickhouseUser: otel-collector
       clickhousePassword:
