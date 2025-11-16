@@ -136,6 +136,11 @@ spec:
             "metricSourceId": "Metrics"
           }
         ]
+    mongodb:
+      persistence:
+        enabled: true
+        dataSize: 10Gi
+        storageClassName: hcloud-volumes
     clickhouse:
       enabled: false
     otel:
