@@ -42,7 +42,7 @@ spec:
       existingConfigSecret: hyperdx-external-config
       existingConfigConnectionsKey: connections.json
       existingConfigSourcesKey: sources.json
-      otelExporterEndpoint: http://otel-collector.observability.svc.cluster.local:4318
+      otelExporterEndpoint: "http://otel-collector.observability.svc.cluster.local:4318"
     clickhouse:
       enabled: false
     otel:
