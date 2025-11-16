@@ -1,0 +1,32 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrepository-source-v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: hcloud-repo
+  namespace: kube-system
+spec:
+  interval: 1m0s
+  url: https://charts.hetzner.cloud
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json
+# https://artifacthub.io/packages/helm/hcloud/hcloud-csi
+# https://github.com/hetznercloud/csi-driver/blob/main/chart/values.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hcloud-csi-release
+  namespace: kube-system
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: hcloud-csi
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: hcloud-repo
+      version: 2.18.0
+  values:
+    controller:
+      hcloudVolumeDefaultLocation: "ash"
