@@ -37,7 +37,8 @@ spec:
       storageClassName: hcloud-volumes
     hyperdx:
       env:
-        BETA_CH_OTEL_JSON_SCHEMA_ENABLED: "true"
+        - name: BETA_CH_OTEL_JSON_SCHEMA_ENABLED
+          value: "true"
       useExistingConfigSecret: true
       existingConfigSecret: hyperdx-external-config
       existingConfigConnectionsKey: connections.json
