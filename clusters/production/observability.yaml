@@ -42,17 +42,134 @@ spec:
       existingConfigSecret: hyperdx-external-config
       existingConfigConnectionsKey: connections.json
       existingConfigSourcesKey: sources.json
+      otelExporterEndpoint: http://otel-collector.observability.svc.cluster.local:4318
     clickhouse:
       enabled: false
     otel:
-      env:
-        OTEL_AGENT_FEATURE_GATE_ARG: --feature-gates=clickhouse.json
-      clickhouseEndpoint: tcp://clickhouse-cluster01.clickhouse.svc.cluster.local:9000
-      clickhouseUser: otel-collector
-      clickhousePassword:
-        valueFrom:
-          secretKeyRef:
-            name: clickhouse-opentelemetry-collector-account
-            key: password
-      clickhousePrometheusEndpoint: ""
-      clickhouseDatabase: otel
+      enabled: false
+# ---
+# # yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/configmap-v1.json
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: otel-custom-config
+#   namespace: observability
+# data:
+#   custom.config.yaml: test
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/deployment-apps-v1.json
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      # volumes:
+      #   - name: custom-config
+      #     configMap:
+      #       name: otel-custom-config
+      containers:
+        - name: otel-collector
+          image: docker.hyperdx.io/hyperdx/hyperdx-otel-collector:2.7.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 13133
+            - containerPort: 24225
+            - containerPort: 4317
+            - containerPort: 4318
+            - containerPort: 8888
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 13133
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 13133
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          env:
+            - name: CLICKHOUSE_ENDPOINT
+              value: tcp://clickhouse-cluster01.clickhouse.svc.cluster.local:9000
+            - name: CLICKHOUSE_SERVER_ENDPOINT
+              value: tcp://clickhouse-cluster01.clickhouse.svc.cluster.local:9000
+            # - name: CLICKHOUSE_PROMETHEUS_METRICS_ENDPOINT
+            #   value: hyperdx-release-hdx-oss-v2-clickhouse:9363
+            - name: OPAMP_SERVER_URL
+              value: http://hyperdx-release-hdx-oss-v2-app.observability.svc.cluster.local:4320
+            - name: HYPERDX_LOG_LEVEL
+              value: info
+            - name: HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE
+              value: otel
+            - name: HYPERDX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: hyperdx-release-hdx-oss-v2-app-secrets
+            - name: CLICKHOUSE_USER
+              value: otel-collector
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-opentelemetry-collector-account
+                  key: password
+            # - name: CUSTOM_OTELCOL_CONFIG_FILE
+            #   value: /etc/otelcol-contrib/custom.config.yaml
+            - name: OTEL_AGENT_FEATURE_GATE_ARG
+              value: --feature-gates=clickhouse.json
+          # volumeMounts:
+          #   - name: custom-config
+          #     mountPath: /etc/otelcol-contrib/custom.config.yaml
+          #     subPath: custom.config.yaml
+          #     readOnly: true
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/service-v1.json
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: observability
+spec:
+  selector:
+    app: otel-collector
+  type: ClusterIP
+  ports:
+    - name: health
+      port: 13133
+      protocol: TCP
+      targetPort: 13133
+    - name: fluentd
+      port: 24225
+      protocol: TCP
+      targetPort: 24225
+    - name: otlp-grpc
+      port: 4317
+      protocol: TCP
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      protocol: TCP
+      targetPort: 4318
+    - name: metrics
+      port: 8888
+      protocol: TCP
+      targetPort: 8888
