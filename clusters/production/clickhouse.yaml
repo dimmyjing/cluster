@@ -33,7 +33,7 @@ spec:
       version: 0.25.5
   values:
 ---
-apiVersion: clickhouse.altinity.com/v1
+apiVersion: clickhouse-keeper.altinity.com/v1
 kind: ClickHouseKeeperInstallation
 metadata:
   name: clickhouse-keeper
