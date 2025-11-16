@@ -1,0 +1,43 @@
+[tools]
+opentofu = "latest"
+packer = "latest"
+sops = "latest"
+
+[tasks.packer]
+description = "Run Packer to build images to Hetzner Cloud"
+run = [
+	'packer init .',
+	'packer build .'
+]
+dir = "./build/packer"
+hide = true
+
+[tasks."tofu:init"]
+description = "Initialize OpenTofu"
+run = ['tofu init']
+
+[tasks."tofu:plan"]
+description = "Generate and show an execution plan for OpenTofu"
+run = ['tofu plan']
+
+[tasks."tofu:apply"]
+description = "Apply the changes required to reach the desired state of the configuration for OpenTofu"
+run = ['tofu apply']
+
+[tasks."tofu:output-config"]
+description = "Output the configuration values for OpenTofu"
+run = [
+	'terraform output --raw kubeconfig > ./config/kubeconfig',
+	'terraform output --raw talosconfig > ./config/talosconfig'
+]
+
+[env]
+SOPS_AGE_KEY_FILE = "{{config_root}}/config/key.txt"
+TALOSCONFIG="{{config_root}}/config/talosconfig"
+KUBECONFIG="{{config_root}}/config/kubeconfig"
+
+[env._]
+file = { path = "config/env.yaml", redact = true }
+
+[settings.sops]
+age_key_file = "{{config_root}}/config/key.txt"

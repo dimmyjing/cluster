@@ -1,0 +1,6 @@
+/config/key.txt
+/config/kubeconfig
+/config/talosconfig
+/.terraform/
+*.tfstate
+*.tfstate.*
