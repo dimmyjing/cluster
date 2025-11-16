@@ -100,3 +100,24 @@ resource "b2_application_key" "clickhouse_key" {
   capabilities = ["deleteFiles", "listFiles", "readFiles", "writeFiles"]
   bucket_id    = b2_bucket.clickhouse.bucket_id
 }
+
+resource "kubernetes_namespace" "clickhouse" {
+  metadata {
+    name = "clickhouse"
+  }
+  depends_on = [local_file.kubeconfig]
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+resource "kubernetes_secret" "clickhouse_b2_key" {
+  metadata {
+    name      = "clickhouse-b2-application-key"
+    namespace = "clickhouse"
+  }
+  data = {
+    "access_key_id" = b2_application_key.clickhouse_key.application_key_id
+    "access_key"    = b2_application_key.clickhouse_key.application_key
+  }
+}
