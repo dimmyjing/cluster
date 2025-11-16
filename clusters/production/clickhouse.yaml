@@ -1,0 +1,158 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/namespace-v1.json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clickhouse
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrepository-source-v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: altinity-repo
+  namespace: clickhouse
+spec:
+  interval: 1m0s
+  url: https://helm.altinity.com
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json
+# https://artifacthub.io/packages/helm/altinity-clickhouse-operator/altinity-clickhouse-operator
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: clickhouse-operator-release
+  namespace: clickhouse
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: altinity-clickhouse-operator
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: altinity-repo
+      version: 0.25.5
+  values:
+---
+apiVersion: clickhouse-keeper.altinity.com/v1
+kind: ClickHouseKeeperInstallation
+metadata:
+  name: clickhouse-keeper
+  namespace: clickhouse
+spec:
+  configuration:
+    clusters:
+      - name: chk01
+        layout:
+          replicasCount: 3
+  defaults:
+    templates:
+      podTemplate: default
+      volumeClaimTemplate: keeper-storage
+  templates:
+    podTemplates:
+      - name: default
+        metadata:
+          labels:
+            app: clickhouse-keeper
+          containers:
+            - name: clickhouse-keeper
+              imagePullPolicy: IfNotPresent
+              image: "clickhouse/clickhouse-keeper:latest"
+              resources:
+                requests:
+                  memory: "256M"
+                  cpu: "1"
+                limits:
+                  memory: "4Gi"
+                  cpu: "2"
+          securityContext:
+            fsGroup: 101
+    volumeClaimTemplates:
+      - name: keeper-storage
+        reclaimPolicy: Retain
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: hcloud-volumes
+---
+apiVersion: clickhouse.altinity.com/v1
+kind: ClickHouseInstallation
+metadata:
+  name: cluster01
+  namespace: clickhouse
+spec:
+  templates:
+    podTemplates:
+      - name: clickhouse-pod-template
+        spec:
+          containers:
+            - name: clickhouse
+              image: altinity/clickhouse-server:25.3.8.10041.altinitystable
+              volumeMounts:
+                - name: clickhouse-storage
+                  mountPath: /var/lib/clickhouse
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse_b2_key
+                      key: access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse_b2_key
+                      key: access_key
+    volumeClaimTemplates:
+      - name: clickhouse-storage
+        reclaimPolicy: Retain
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Gi
+          storageClassName: hcloud-volumes
+  configuration:
+    zookeeper:
+      nodes:
+        - host: keeper-clickhouse-keeper.clickhouse.svc.cluster.local
+          port: 2181
+    clusters:
+      - name: cluster01
+        layout:
+          shardsCount: 1
+          replicasCount: 1
+        templates:
+          podTemplate: clickhouse-pod-template
+    # files:
+    #   storage.xml: |
+    #     <clickhouse>
+    #       <storage_configuration>
+    #         <disks>
+    #           <s3_disk>
+    #             <type>s3</type>
+    #             <endpoint>https://s3.us-east-005.backblazeb2.com/jimmy-cluster-clickhouse</endpoint>
+    #             <use_environment_credentials>1</use_environment_credentials>
+    #             <metadata_path>/var/lib/clickhouse/disks/s3_disk/</metadata_path>
+    #           </s3_disk>
+    #           <s3_cache>
+    #             <type>cache</type>
+    #             <disk>s3_disk</disk>
+    #             <path>/var/lib/clickhouse/disks/s3_cache/</path>
+    #             <max_size>100Gi</max_size>
+    #           </s3_cache>
+    #         </disks>
+    #         <policies>
+    #           <s3_main>
+    #             <volumes>
+    #               <main>
+    #                 <disk>s3_disk</disk>
+    #               </main>
+    #             </volumes>
+    #           </s3_main>
+    #         </policies>
+    #       </storage_configuration>
+    #     </clickhouse>
