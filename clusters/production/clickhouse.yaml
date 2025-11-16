@@ -130,12 +130,14 @@ spec:
     users:
       otel-collector/password_sha256_hex: 3a03974c7a3166e797cd17f144cef4ac20e90092b39afbf14221af95e0a21453
       otel-collector/profile: default
+      otel-collector/networks/host_regexp: .+
       otel-collector/networks/ip:
         - 0.0.0.0
       hyperdx/password_sha256_hex: 0bb558fddd8949763af581d9b2b8300eb0f73de661ac9cbecbbb9bb270dd04d5
       hyperdx/profile: readonly
       hyperdx/networks/ip:
         - 0.0.0.0
+      hyperdx/networks/host_regexp: .+
     files:
       storage.xml: |
         <clickhouse>
