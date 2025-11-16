@@ -94,17 +94,17 @@ spec:
               volumeMounts:
                 - name: clickhouse-storage
                   mountPath: /var/lib/clickhouse
-              # env:
-              #   - name: AWS_ACCESS_KEY_ID
-              #     valueFrom:
-              #       secretKeyRef:
-              #         name: clickhouse_b2_key
-              #         key: access_key_id
-              #   - name: AWS_SECRET_ACCESS_KEY
-              #     valueFrom:
-              #       secretKeyRef:
-              #         name: clickhouse_b2_key
-              #         key: access_key
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse_b2_key
+                      key: access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse_b2_key
+                      key: access_key
     volumeClaimTemplates:
       - name: clickhouse-storage
         reclaimPolicy: Retain
