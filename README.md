@@ -9,3 +9,4 @@ Most of this repository uses [terraform-hcloud-talos](https://github.com/hcloud-
 3. Run `mise packer`
 4. Run `mise tofu:init`
 5. Run `mise tofu:apply`
+6. Apply `clickhouse-otel-schema.sql` before the tables are created
