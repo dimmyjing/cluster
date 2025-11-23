@@ -8,30 +8,30 @@ metadata:
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: hyperdx-repo
+  name: clickstack-repo
   namespace: observability
 spec:
   interval: 1m0s
   url: https://hyperdxio.github.io/helm-charts
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json
-# https://artifacthub.io/packages/helm/hdx-oss-v2/hdx-oss-v2
-# https://github.com/hyperdxio/helm-charts/blob/main/charts/hdx-oss-v2/values.yaml
+# https://artifacthub.io/packages/helm/hdx-oss-v2/clickstack
+# https://github.com/hyperdxio/helm-charts/blob/main/charts/clickstack/values.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: hyperdx-release
+  name: clickstack-release
   namespace: observability
 spec:
   interval: 10m
   chart:
     spec:
-      chart: hdx-oss-v2
+      chart: clickstack
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
-        name: hyperdx-repo
-      version: 0.8.4
+        name: clickstack-repo
+      version: 1.0.0
   values:
     global:
       storageClassName: hcloud-volumes
