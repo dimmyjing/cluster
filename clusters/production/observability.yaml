@@ -44,6 +44,7 @@ spec:
       existingConfigConnectionsKey: connections.json
       existingConfigSourcesKey: sources.json
       otelExporterEndpoint: "http://otel-collector.observability.svc.cluster.local:4318"
+      apiKey: 48daf6aa-a32e-4c36-afbb-4b5ffb5ec27f
     clickhouse:
       enabled: false
     otel:
