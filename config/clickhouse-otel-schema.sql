@@ -24,7 +24,7 @@ PARTITION BY toDate(Timestamp)
 PRIMARY KEY (ServiceName, toDateTime(Timestamp))
 ORDER BY (ServiceName, toDateTime(Timestamp), Timestamp)
 TTL Timestamp + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_metrics_exponential_histogram
 
@@ -72,7 +72,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(TimeUnix)
 ORDER BY (ServiceName, MetricName, Attributes, toUnixTimestamp64Nano(TimeUnix))
 TTL toDateTime(TimeUnix) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_metrics_gauge
 
@@ -110,7 +110,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(TimeUnix)
 ORDER BY (ServiceName, MetricName, Attributes, toUnixTimestamp64Nano(TimeUnix))
 TTL toDateTime(TimeUnix) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_metrics_histogram
 
@@ -154,7 +154,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(TimeUnix)
 ORDER BY (ServiceName, MetricName, Attributes, toUnixTimestamp64Nano(TimeUnix))
 TTL toDateTime(TimeUnix) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_metrics_sum
 
@@ -194,7 +194,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(TimeUnix)
 ORDER BY (ServiceName, MetricName, Attributes, toUnixTimestamp64Nano(TimeUnix))
 TTL toDateTime(TimeUnix) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_metrics_summary
 
@@ -230,7 +230,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(TimeUnix)
 ORDER BY (ServiceName, MetricName, Attributes, toUnixTimestamp64Nano(TimeUnix))
 TTL toDateTime(TimeUnix) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_traces
 
@@ -264,7 +264,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(Timestamp)
 ORDER BY (ServiceName, SpanName, toDateTime(Timestamp), Timestamp)
 TTL toDateTime(Timestamp) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_traces_trace_id_ts
 
@@ -279,7 +279,7 @@ ENGINE = MergeTree
 PARTITION BY toDate(Start)
 ORDER BY (TraceId, Start)
 TTL toDateTime(Start) + toIntervalDay(30)
-SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1, storage_policy='s3_main';
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1;
 
 -- otel_traces_trace_id_ts_mv
 

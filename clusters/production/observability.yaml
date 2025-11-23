@@ -47,7 +47,16 @@ spec:
     clickhouse:
       enabled: false
     otel:
-      enabled: false
+      clickhouseEndpoint: "http://clickhouse-cluster01.clickhouse.svc.cluster.local:8123"
+      clickhousePrometheusEndpoint: "clickhouse-operator-altinity-clickhouse-operator-metrics.clickhouse.svc.cluster.local:8888"
+      clickhouseDatabase: otel
+      clickhouseUser: otel-collector
+      env:
+        - name: CLICKHOUSE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: clickhouse-opentelemetry-collector-account
+              key: password
 ---
 # # yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.31.1/configmap-v1.json
 # apiVersion: v1
