@@ -60,3 +60,32 @@ spec:
               key: password
         - name: OTEL_AGENT_FEATURE_GATE_ARG
           value: "--feature-gates=clickhouse.json"
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrepository-source-v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: opentelemetry-repo
+  namespace: observability
+spec:
+  interval: 1m0s
+  url: https://open-telemetry.github.io/opentelemetry-helm-charts
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json
+# https://artifacthub.io/packages/helm/opentelemetry-helm/opentelemetry-operator
+# https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-operator/values.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: opentelemetry-operator-release
+  namespace: observability
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: opentelemetry-operator
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: opentelemetry-repo
+      version: 0.99.2
