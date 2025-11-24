@@ -420,6 +420,8 @@ spec:
         secretKeyRef:
           name: clickhouse-opentelemetry-collector-account
           key: password
+  args:
+    feature-gates: clickhouse.json
   config:
     receivers:
       otlp:
@@ -502,7 +504,7 @@ spec:
         timeout: 5s
         retry_on_failure:
           enabled: true
-          init_interval: 5s
+          initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
       clickhouse/rrweb:
@@ -515,7 +517,7 @@ spec:
         timeout: 5s
         retry_on_failure:
           enabled: true
-          init_interval: 5s
+          initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
     service:
