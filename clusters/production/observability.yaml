@@ -201,6 +201,66 @@ subjects:
     name: agent-collector-collector
     namespace: observability
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: opentelemetry-gateway-collector
+rules:
+  - apiGroups: [""]
+    resources:
+      - events,
+      - namespaces,
+      - namespaces/status,
+      - nodes,
+      - nodes/spec,
+      - pods,
+      - pods/status,
+      - replicationcontrollers,
+      - replicationcontrollers/status,
+      - resourcequotas,
+      - services,
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["events.k8s.io"]
+    resources:
+      - events
+    verbs: ["watch", "list"]
+---
+# Source: opentelemetry-collector/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: opentelemetry-gateway-collector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: opentelemetry-gateway-collector
+subjects:
+  - kind: ServiceAccount
+    name: gateway-collector-collector
+    namespace: default
+---
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
@@ -331,6 +391,79 @@ spec:
         logs:
           receivers: [otlp, receiver_creator/logs]
           processors: [k8sattributes, memory_limiter, batch]
+          exporters: [otlp]
+      telemetry:
+        metrics:
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: ${env:MY_POD_IP}
+                    port: 8888
+---
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: agent-collector
+  namespace: observability
+spec:
+  mode: deployment
+  replicas: 1
+  env:
+    - name: MY_POD_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.podIP
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+            cors:
+              allowed_origins: ["*"]
+              allowed_headers: ["*"]
+      k8s_cluster:
+        collection_interval: 10s
+      k8sobjects:
+        objects:
+          - exclude_watch_type:
+              - DELETED
+            group: events.k8s.io
+            mode: watch
+            name: events
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+    processors:
+      batch: {}
+      memory_limiter:
+        check_interval: 5s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+    exporters:
+      otlp:
+        endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+    service:
+      extensions:
+        - health_check
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp]
+        metrics:
+          receivers: [otlp, k8s_cluster]
+          processors: [memory_limiter, batch]
+          exporters: [otlp]
+        logs:
+          receivers: [otlp, k8sobjects]
+          processors: [memory_limiter, batch]
           exporters: [otlp]
       telemetry:
         metrics:
