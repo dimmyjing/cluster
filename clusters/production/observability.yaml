@@ -130,7 +130,7 @@ metadata:
   name: opamp-bridge
   namespace: observability
 spec:
-  endpoint: "http://clickstack-release-app.observability.svc.custer.local:4320"
+  endpoint: "http://clickstack-release-app:4320"
   capabilities:
     AcceptsRemoteConfig: true
     ReportsEffectiveConfig: true
