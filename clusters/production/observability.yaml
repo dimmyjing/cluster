@@ -254,6 +254,8 @@ kind: OpenTelemetryCollector
 metadata:
   name: agent-collector
   namespace: observability
+  labels:
+    opentelemetry.io/opamp-managed: opamp-bridge
 spec:
   mode: daemonset
   env:
