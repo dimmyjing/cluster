@@ -222,11 +222,6 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.hostIP
-    - name: BEARER_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: clickstack-release-app-secrets
-          key: api-key
   targetAllocator:
     enabled: true
     allocationStrategy: per-node
@@ -240,17 +235,11 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
-            include_metadata: true
-            auth:
-              authenticator: bearertokenauth
           http:
             endpoint: 0.0.0.0:4318
             cors:
               allowed_origins: ["*"]
               allowed_headers: ["*"]
-            include_metadata: true
-            auth:
-              authenticator: bearertokenauth
       prometheus:
         config:
           scrape_configs:
@@ -276,10 +265,6 @@ spec:
       k8s_observer:
         auth_type: serviceAccount
         node: ${env:K8S_NODE_NAME}
-      bearertokenauth:
-        scheme: ""
-        tokens:
-          - ${env:BEARER_TOKEN}
     processors:
       batch: {}
       k8sattributes:
@@ -330,13 +315,10 @@ spec:
         endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
         tls:
           insecure: true
-        auth:
-          authenticator: bearertokenauth
     service:
       extensions:
         - health_check
         - k8s_observer
-        - bearertokenauth
       pipelines:
         traces:
           receivers: [otlp]
