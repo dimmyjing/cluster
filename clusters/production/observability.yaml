@@ -99,6 +99,9 @@ spec:
   mode: daemonset
   targetAllocator:
     enabled: true
+    allocationStrategy: per-node
+    prometheusCR:
+      enabled: true
   config:
     receivers:
       otlp:
