@@ -98,54 +98,6 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: opamp-bridge
-rules:
-  - apiGroups:
-      - opentelemetry.io
-    resources:
-      - opentelemetrycollectors
-    verbs: ["*"]
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: opamp-bridge
-subjects:
-  - kind: ServiceAccount
-    name: opamp-bridge-opamp-bridge
-    namespace: observability
-roleRef:
-  kind: ClusterRole
-  name: opamp-bridge
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: opentelemetry.io/v1alpha1
-kind: OpAMPBridge
-metadata:
-  name: opamp-bridge
-  namespace: observability
-spec:
-  endpoint: "http://clickstack-release-app.observability.svc.cluster.local:4320"
-  capabilities:
-    AcceptsRemoteConfig: true
-    ReportsEffectiveConfig: true
-    ReportsHealth: true
-    ReportsRemoteConfig: true
-    ReportsOwnLogs: true
-    ReportsOwnMetrics: true
-    ReportsOwnTraces: true
-  componentsAllowed:
-    extensions:
-      - bearertokenauth/hyperdx
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
   name: opentelemetry-targetallocator
 rules:
   - apiGroups: [""]
@@ -254,8 +206,6 @@ kind: OpenTelemetryCollector
 metadata:
   name: agent-collector
   namespace: observability
-  labels:
-    opentelemetry.io/opamp-managed: opamp-bridge
 spec:
   mode: daemonset
   env:
@@ -272,6 +222,11 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.hostIP
+    - name: BEARER_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: clickstack-release-app-secrets
+          key: api-key
   targetAllocator:
     enabled: true
     allocationStrategy: per-node
@@ -321,6 +276,10 @@ spec:
       k8s_observer:
         auth_type: serviceAccount
         node: ${env:K8S_NODE_NAME}
+      bearertokenauth:
+        scheme: ""
+        tokens:
+          - ${env:BEARER_TOKEN}
     processors:
       batch: {}
       k8sattributes:
