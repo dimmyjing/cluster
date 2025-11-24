@@ -259,7 +259,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: gateway-collector-collector
-    namespace: default
+    namespace: observability
 ---
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
