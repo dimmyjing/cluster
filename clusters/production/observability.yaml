@@ -208,17 +208,17 @@ metadata:
 rules:
   - apiGroups: [""]
     resources:
-      - events,
-      - namespaces,
-      - namespaces/status,
-      - nodes,
-      - nodes/spec,
-      - pods,
-      - pods/status,
-      - replicationcontrollers,
-      - replicationcontrollers/status,
-      - resourcequotas,
-      - services,
+      - events
+      - namespaces
+      - namespaces/status
+      - nodes
+      - nodes/spec
+      - pods
+      - pods/status
+      - replicationcontrollers
+      - replicationcontrollers/status
+      - resourcequotas
+      - services
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources:
