@@ -247,7 +247,6 @@ rules:
       - events
     verbs: ["watch", "list"]
 ---
-# Source: opentelemetry-collector/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -415,6 +414,11 @@ spec:
         fieldRef:
           apiVersion: v1
           fieldPath: status.podIP
+    - name: CLICKHOUSE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: clickhouse-opentelemetry-collector-account
+          key: password
   config:
     receivers:
       otlp:
@@ -444,11 +448,75 @@ spec:
         check_interval: 5s
         limit_percentage: 80
         spike_limit_percentage: 25
+      transform:
+        log_statements:
+          - context: log
+            error_mode: ignore
+            statements:
+              - set(log.cache, ExtractPatterns(log.body, "(?P<0>(\\{.*\\}))")) where IsString(log.body)
+              - merge_maps(log.attributes, ParseJSON(log.cache["0"]), "upsert") where IsMap(log.cache)
+              - flatten(log.attributes) where IsMap(log.cache)
+              - merge_maps(log.attributes, log.body, "upsert") where IsMap(log.body)
+          - conditions:
+              - severity_number == 0 and severity_text == ""
+            context: log
+            error_mode: ignore
+            statements:
+              - set(log.cache["substr"], log.body.string) where Len(log.body.string) < 256
+              - set(log.cache["substr"], Substring(log.body.string, 0, 256)) where Len(log.body.string) >= 256
+              - set(log.cache, ExtractPatterns(log.cache["substr"], "(?i)(?P<0>(alert|crit|emerg|fatal|error|err|warn|notice|debug|dbug|trace))"))
+              - set(log.severity_number, SEVERITY_NUMBER_FATAL) where IsMatch(log.cache["0"], "(?i)(alert|crit|emerg|fatal)")
+              - set(log.severity_text, "fatal") where log.severity_number == SEVERITY_NUMBER_FATAL
+              - set(log.severity_number, SEVERITY_NUMBER_ERROR) where IsMatch(log.cache["0"], "(?i)(error|err)")
+              - set(log.severity_text, "error") where log.severity_number == SEVERITY_NUMBER_ERROR
+              - set(log.severity_number, SEVERITY_NUMBER_WARN) where IsMatch(log.cache["0"], "(?i)(warn|notice)")
+              - set(log.severity_text, "warn") where log.severity_number == SEVERITY_NUMBER_WARN
+              - set(log.severity_number, SEVERITY_NUMBER_DEBUG) where IsMatch(log.cache["0"], "(?i)(debug|dbug)")
+              - set(log.severity_text, "debug") where log.severity_number == SEVERITY_NUMBER_DEBUG
+              - set(log.severity_number, SEVERITY_NUMBER_TRACE) where IsMatch(log.cache["0"], "(?i)(trace)")
+              - set(log.severity_text, "trace") where log.severity_number == SEVERITY_NUMBER_TRACE
+              - set(log.severity_text, "info") where log.severity_number == 0
+              - set(log.severity_number, SEVERITY_NUMBER_INFO) where log.severity_number == 0
+          - context: log
+            error_mode: ignore
+            statements:
+              - set(log.severity_text, ConvertCase(log.severity_text, "lower"))
+    connectors:
+      routing/logs:
+        default_pipelines:
+          - logs/out-default
+        error_mode: ignore
+        table:
+          - context: log
+            statement: 'route() where IsMatch(attributes["rr-web.event"], ".*")'
+            pipelines:
+              - logs/out-rrweb
     exporters:
-      otlp:
-        endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
-        tls:
-          insecure: true
+      clickhouse:
+        endpoint: http://clickhouse-cluster01.clickhouse.svc.cluster.local:8123
+        database: otel
+        username: otel-collector
+        password: ${env:CLICKHOUSE_PASSWORD}
+        ttl: 720h
+        timeout: 5s
+        retry_on_failure:
+          enabled: true
+          init_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+      clickhouse/rrweb:
+        endpoint: http://clickhouse-cluster01.clickhouse.svc.cluster.local:8123
+        database: otel
+        username: otel-collector
+        password: ${env:CLICKHOUSE_PASSWORD}
+        ttl: 720h
+        logs_table_name: hyperdx_sessions
+        timeout: 5s
+        retry_on_failure:
+          enabled: true
+          init_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
     service:
       extensions:
         - health_check
@@ -456,15 +524,22 @@ spec:
         traces:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [otlp]
+          exporters: [clickhouse]
         metrics:
           receivers: [otlp, k8s_cluster]
           processors: [memory_limiter, batch]
-          exporters: [otlp]
-        logs:
+          exporters: [clickhouse]
+        logs/in:
           receivers: [otlp, k8sobjects]
+          exporters: [routing/logs]
+        logs/out-default:
+          receivers: [routing/logs]
+          processors: [memory_limiter, transform, batch]
+          exporters: [clickhouse]
+        logs/out-rrweb:
+          receivers: [routing/logs]
           processors: [memory_limiter, batch]
-          exporters: [otlp]
+          exporters: [clickhouse/rrweb]
       telemetry:
         metrics:
           readers:
