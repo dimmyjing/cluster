@@ -48,18 +48,7 @@ spec:
     clickhouse:
       enabled: false
     otel:
-      clickhouseEndpoint: "http://clickhouse-cluster01.clickhouse.svc.cluster.local:8123"
-      clickhousePrometheusEndpoint: "clickhouse-operator-altinity-clickhouse-operator-metrics.clickhouse.svc.cluster.local:8888"
-      clickhouseDatabase: otel
-      clickhouseUser: otel-collector
-      env:
-        - name: CLICKHOUSE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: clickhouse-opentelemetry-collector-account
-              key: password
-        - name: OTEL_AGENT_FEATURE_GATE_ARG
-          value: "--feature-gates=clickhouse.json"
+      enabled: false
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrepository-source-v1.json
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -371,7 +360,7 @@ spec:
         spike_limit_percentage: 25
     exporters:
       otlp:
-        endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
+        endpoint: gateway-collector-collector.observability.svc.cluster.local:4317
         tls:
           insecure: true
     service:
