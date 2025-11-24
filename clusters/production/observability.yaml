@@ -117,7 +117,7 @@ metadata:
   name: opamp-bridge
 subjects:
   - kind: ServiceAccount
-    name: opamp-bridge-sa
+    name: opamp-bridge-opamp-bridge
     namespace: observability
 roleRef:
   kind: ClusterRole
