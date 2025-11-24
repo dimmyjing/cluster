@@ -242,7 +242,7 @@ spec:
             endpoint: 0.0.0.0:4317
             include_metadata: true
             auth:
-              authenticator: bearertokenauth/hyperdx
+              authenticator: bearertokenauth
           http:
             endpoint: 0.0.0.0:4318
             cors:
@@ -250,7 +250,7 @@ spec:
               allowed_headers: ["*"]
             include_metadata: true
             auth:
-              authenticator: bearertokenauth/hyperdx
+              authenticator: bearertokenauth
       prometheus:
         config:
           scrape_configs:
@@ -331,12 +331,12 @@ spec:
         tls:
           insecure: true
         auth:
-          authenticator: bearertokenauth/hyperdx
+          authenticator: bearertokenauth
     service:
       extensions:
         - health_check
         - k8s_observer
-        - bearertokenauth/hyperdx
+        - bearertokenauth
       pipelines:
         traces:
           receivers: [otlp]
