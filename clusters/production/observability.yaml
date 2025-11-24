@@ -285,8 +285,17 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+            include_metadata: true
+            auth:
+              authenticator: bearertokenauth/hyperdx
           http:
             endpoint: 0.0.0.0:4318
+            cors:
+              allowed_origins: ["*"]
+              allowed_headers: ["*"]
+            include_metadata: true
+            auth:
+              authenticator: bearertokenauth/hyperdx
       prometheus:
         config:
           scrape_configs:
@@ -362,10 +371,13 @@ spec:
         endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
         tls:
           insecure: true
+        auth:
+          authenticator: bearertokenauth/hyperdx
     service:
       extensions:
         - health_check
         - k8s_observer
+        - bearertokenauth/hyperdx
       pipelines:
         traces:
           receivers: [otlp]
