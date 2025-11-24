@@ -408,6 +408,7 @@ metadata:
 spec:
   mode: deployment
   replicas: 1
+  image: otel/opentelemetry-collector-contrib:0.140.1
   env:
     - name: MY_POD_IP
       valueFrom:
