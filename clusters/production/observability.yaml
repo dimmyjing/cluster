@@ -404,7 +404,7 @@ spec:
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: agent-collector
+  name: gateway-collector
   namespace: observability
 spec:
   mode: deployment
