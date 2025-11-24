@@ -199,6 +199,8 @@ spec:
     exporters:
       otlp:
         endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
     service:
       pipelines:
         traces:
