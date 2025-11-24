@@ -89,3 +89,62 @@ spec:
         kind: HelmRepository
         name: opentelemetry-repo
       version: 0.99.2
+---
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: agent-collector
+spec:
+  mode: daemonset
+  targetAllocator:
+    enabled: true
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 75
+        spike_limit_percentage: 15
+    exporters:
+      otlp:
+        endpoint: clickstack-release-otel-collector.observability.svc.cluster.local:4317
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter]
+          exporters: [otlp]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter]
+          exporters: [otlp]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter]
+          exporters: [otlp]
+# ---
+# TODO: go autoinstrumentation (https://opentelemetry.io/docs/platforms/kubernetes/operator/automatic/#go)
+# apiVersion: opentelemetry.io/v1alpha1
+# kind: Instrumentation
+# metadata:
+#   name: otel-instrumentation
+# spec:
+#   exporter:
+#     endpoint: http://agent-collector.observability.svc.cluster.local:4317
+#   propagators:
+#     - tracecontext
+#     - baggage
+#     - b3
+#   go:
+#     env:
+#       # Required if endpoint is set to 4317.
+#       # Go autoinstrumentation uses http/proto by default
+#       # so data must be sent to 4318 instead of 4317.
+#       - name: OTEL_EXPORTER_OTLP_ENDPOINT
+#         value: http://agent-collector.observability.svc.cluster.local:4318
