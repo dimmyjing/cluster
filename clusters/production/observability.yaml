@@ -125,6 +125,10 @@ rules:
     verbs: ["get", "list", "watch"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
+  - nonResourceURLs: ["/apis"]
+    verbs: ["get"]
+  - nonResourceURLs: ["/api/*"]
+    verbs: ["get"]
   - apiGroups:
       - monitoring.coreos.com
     resources:
