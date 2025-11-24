@@ -95,6 +95,53 @@ spec:
         targetallocator:
           mtls: true
 ---
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpAMPBridge
+metadata:
+  name: opamp-bridge
+spec:
+  endpoint: "http://clickstack-release-app.observability.svc.custer.local:4320"
+  capabilities:
+    AcceptsRemoteConfig: true
+    ReportsEffectiveConfig: true
+    ReportsHealth: true
+    ReportsRemoteConfig: true
+    ReportsOwnLogs: true
+    ReportsOwnMetrics: true
+    ReportsOwnTraces: true
+  componentsAllowed:
+    extensions:
+      - bearertokenauth/hyperdx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: opamp-bridge
+rules:
+  - apiGroups:
+      - opentelemetry.io
+    resources:
+      - opentelemetrycollectors
+    verbs: ["*"]
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: opamp-bridge
+subjects:
+  - kind: ServiceAccount
+    name: opamp-bridge-sa
+    namespace: observability
+roleRef:
+  kind: ClusterRole
+  name: opamp-bridge
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
