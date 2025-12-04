@@ -79,10 +79,6 @@ spec:
         name: opentelemetry-repo
       version: 0.99.2
   values:
-    manager:
-      operator:
-        targetallocator:
-          mtls: true
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
