@@ -128,4 +128,4 @@ spec:
       hyperdx/networks/ip:
         - ::/0
       hyperdx/networks/host_regexp: .+
-    files:
+    files: {}
