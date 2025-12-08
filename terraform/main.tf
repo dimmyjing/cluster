@@ -16,17 +16,12 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.38.0"
     }
-
-    b2 = {
-      source  = "backblaze/b2"
-      version = ">= 0.11.0"
-    }
   }
 }
 
 module "talos" {
   source  = "hcloud-talos/talos/hcloud"
-  version = "v2.20.2"
+  version = "v2.21.0"
 
   hcloud_token              = var.hcloud_token
   cluster_name              = var.cluster_name
@@ -58,7 +53,7 @@ resource "local_file" "kubeconfig" {
   content  = module.talos.kubeconfig
 }
 
-resource "kubernetes_namespace" "flux-system" {
+resource "kubernetes_namespace_v1" "flux-system" {
   metadata {
     name = "flux-system"
   }
@@ -68,7 +63,7 @@ resource "kubernetes_namespace" "flux-system" {
   }
 }
 
-resource "kubernetes_secret" "sops-age" {
+resource "kubernetes_secret_v1" "sops-age" {
   metadata {
     name      = "sops-age"
     namespace = "flux-system"
@@ -76,11 +71,11 @@ resource "kubernetes_secret" "sops-age" {
   data = {
     "age.agekey" = file("${path.root}/../config/key.txt")
   }
-  depends_on = [kubernetes_namespace.flux-system]
+  depends_on = [kubernetes_namespace_v1.flux-system]
 }
 
 resource "flux_bootstrap_git" "flux" {
-  depends_on         = [kubernetes_secret.sops-age]
+  depends_on         = [kubernetes_secret_v1.sops-age]
   embedded_manifests = true
   components_extra = [
     "image-reflector-controller",
@@ -88,36 +83,4 @@ resource "flux_bootstrap_git" "flux" {
   ]
   kustomization_override = file("${path.root}/../config/flux-kustomization-patch.yaml")
   path                   = "clusters/production"
-}
-
-resource "b2_bucket" "clickhouse" {
-  bucket_name = "jimmy-cluster-clickhouse"
-  bucket_type = "allPrivate"
-}
-
-resource "b2_application_key" "clickhouse_key" {
-  key_name     = "jimmy-cluster-clickhouse-key"
-  capabilities = ["deleteFiles", "listFiles", "readFiles", "writeFiles"]
-  bucket_id    = b2_bucket.clickhouse.bucket_id
-}
-
-resource "kubernetes_namespace" "clickhouse" {
-  metadata {
-    name = "clickhouse"
-  }
-  depends_on = [local_file.kubeconfig]
-  lifecycle {
-    ignore_changes = all
-  }
-}
-
-resource "kubernetes_secret" "clickhouse_b2_key" {
-  metadata {
-    name      = "clickhouse-b2-application-key"
-    namespace = "clickhouse"
-  }
-  data = {
-    "access_key_id" = b2_application_key.clickhouse_key.application_key_id
-    "access_key"    = b2_application_key.clickhouse_key.application_key
-  }
 }
