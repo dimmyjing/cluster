@@ -2,5 +2,4 @@
 /config/kubeconfig
 /config/talosconfig
 /terraform/.terraform/
-*.tfstate
 *.tfstate.*

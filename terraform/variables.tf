@@ -26,12 +26,7 @@ variable "github_token" {
   type        = string
 }
 
-variable "b2_application_key" {
-  description = "Backblaze B2 Application Key"
-  type        = string
-}
-
-variable "b2_application_key_id" {
-  description = "Backblaze B2 Application Key ID"
+variable "state_passphrase" {
+  description = "Passphrase for encrypting the Terraform state"
   type        = string
 }

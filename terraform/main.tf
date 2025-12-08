@@ -17,6 +17,24 @@ terraform {
       version = ">= 2.38.0"
     }
   }
+
+  encryption {
+    key_provider "pbkdf2" "encryption_key" {
+      passphrase = var.state_passphrase
+    }
+
+    method "aes_gcm" "default" {
+      keys = key_provider.pbkdf2.encryption_key
+    }
+
+    state {
+      method = method.aes_gcm.default
+    }
+
+    plan {
+      method = method.aes_gcm.default
+    }
+  }
 }
 
 module "talos" {
