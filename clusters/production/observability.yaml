@@ -123,6 +123,7 @@ rules:
     resources:
       - servicemonitors
       - podmonitors
+      - probes
     verbs:
       - "*"
   - apiGroups:
@@ -298,8 +299,8 @@ spec:
         endpoint: ${env:K8S_NODE_IP}:10250
       receiver_creator/logs:
         discovery:
-          default_annotations:
-            io.opentelemetry.discovery.logs/enabled: "true"
+          # default_annotations:
+          #   io.opentelemetry.discovery.logs/enabled: "true"
           enabled: true
         watch_observers:
           - k8s_observer
@@ -384,6 +385,14 @@ spec:
                   prometheus:
                     host: ${env:MY_POD_IP}
                     port: 8888
+  volumeMounts:
+    - name: varlogpods
+      mountPath: /var/log/pods
+      readOnly: true
+  volumes:
+    - name: varlogpods
+      hostPath:
+        path: /var/log/pods
 ---
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
