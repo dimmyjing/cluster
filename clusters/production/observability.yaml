@@ -280,6 +280,7 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+            max_recv_msg_size_mib: 100
           http:
             endpoint: 0.0.0.0:4318
             cors:
@@ -422,6 +423,7 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+            max_recv_msg_size_mib: 100
           http:
             endpoint: 0.0.0.0:4318
             cors:
